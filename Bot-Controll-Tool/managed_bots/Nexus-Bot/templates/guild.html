@@ -1,0 +1,20 @@
+{% extends "layout.html" %}
+
+{% block content %}
+<h1><i class="fa-solid fa-server" style="opacity: 0.7;"></i> Kanäle in {{ guild.name }}</h1>
+<p style="margin-bottom: 2rem; opacity: 0.7;">Wähle einen Kanal, um die letzten gespeicherten Nachrichten anzuzeigen.</p>
+
+<div class="card">
+    <ul class="log-list" style="max-height: none;">
+        {% for channel in channels %}
+        <li style="padding: 0.5rem 0.2rem;">
+             <a href="{{ url_for('view_channel', channel_id=channel.id) }}" style="color: var(--text-color); text-decoration: none; display: block; padding: 0.3rem; border-radius: 4px; transition: background 0.2s ease;">
+                # {{ channel.name }}
+            </a>
+        </li>
+        {% else %}
+        <li>Auf diesem Server wurden keine Textkanäle gefunden.</li>
+        {% endfor %}
+    </ul>
+</div>
+{% endblock %}

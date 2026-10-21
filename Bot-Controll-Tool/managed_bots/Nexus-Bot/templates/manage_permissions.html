@@ -1,0 +1,134 @@
+{% extends "layout.html" %}
+
+{% block content %}
+<h1><i class="fa-solid fa-shield-halved"></i> Berechtigungen verwalten</h1>
+<p style="margin-bottom: 1rem;">Vergib hier Benutzern oder Rollen Zugriff auf private Web-Plugins.</p>
+
+<div class="card" style="margin-bottom: 1.5rem; padding: 1rem;">
+    <form method="GET" id="guild_select_form" style="display: flex; align-items: center; gap: 15px;">
+        <label for="guild_id" style="margin-bottom: 0; white-space: nowrap;">Server auswählen:</label>
+        <select name="guild_id" id="guild_id" onchange="document.getElementById('guild_select_form').submit()" style="flex-grow: 1; padding: 0.5rem; background: var(--bg-color); border: 1px solid var(--border-color); border-radius: 8px; color: var(--text-color);">
+            {% if all_guilds %}
+                {% for guild in all_guilds %}
+                    <option value="{{ guild.id }}" {% if current_guild and current_guild.id == guild.id %}selected{% endif %}>{{ guild.name }}</option>
+                {% endfor %}
+            {% else %}
+                <option>Keine Server gefunden</option>
+            {% endif %}
+        </select>
+    </form>
+</div>
+
+{% if not current_guild %}
+    <div class="card">
+        <p>Bitte wähle oben einen Server aus, um die Berechtigungen zu verwalten.</p>
+    </div>
+{% else %}
+    <div class="card">
+        <h2>Neue Berechtigung für "{{ current_guild.name }}" hinzufügen</h2>
+        <form method="POST">
+            <input type="hidden" name="action" value="add">
+            <div class="grid" style="grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); align-items: flex-end;">
+                <div class="form-group">
+                    <label for="plugin_name">Plugin</label>
+                    <select name="plugin_name" id="plugin_name" required class="form-control" style="width: 100%; padding: 0.8rem; background: var(--bg-color); border: 1px solid var(--border-color); border-radius: 8px; color: var(--text-color); font-size: 1rem;">
+                        {% for plugin in plugins %}<option value="{{ plugin.name }}">{{ plugin.display_name }}</option>{% else %}<option value="" disabled>Keine privaten Plugins</option>{% endfor %}
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label for="entity_type">Typ</label>
+                    <select name="entity_type" id="entity_type" required class="form-control" style="width: 100%; padding: 0.8rem; background: var(--bg-color); border: 1px solid var(--border-color); border-radius: 8px; color: var(--text-color); font-size: 1rem;">
+                        <option value="role">Rolle</option>
+                        <option value="user">Benutzer</option>
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label>Rolle oder Benutzer</label>
+                    <select name="entity_id_role" id="entity_id_role" class="form-control" style="width: 100%; padding: 0.8rem; background: var(--bg-color); border: 1px solid var(--border-color); border-radius: 8px; color: var(--text-color); font-size: 1rem;">
+                         {% for role in roles %}{% if role.name != '@everyone' %}<option value="{{ role.id }}">{{ role.name }}</option>{% endif %}{% endfor %}
+                    </select>
+                    <select name="entity_id_user" id="entity_id_user" class="form-control" style="display: none; width: 100%; padding: 0.8rem; background: var(--bg-color); border: 1px solid var(--border-color); border-radius: 8px; color: var(--text-color); font-size: 1rem;">
+                         {% for member in members %}<option value="{{ member.id }}">{{ member.display_name }}</option>{% endfor %}
+                    </select>
+                </div>
+                 <div class="form-group">
+                     <button type="submit" class="btn-primary" style="width: 100%;">
+                        <i class="fa-solid fa-plus"></i> Hinzufügen
+                    </button>
+                 </div>
+            </div>
+             <input type="hidden" name="entity_id" id="final_entity_id">
+        </form>
+    </div>
+
+    <h2 style="margin-top: 2rem;">Bestehende Berechtigungen</h2>
+    <div class="grid">
+    {% for plugin in plugins %}
+        <div class="card">
+            <h3>{{ plugin.display_name }}</h3>
+            <ul class="log-list" style="max-height: 250px;">
+                {% set current_perms = permissions[plugin.name] %}
+                {% if not current_perms %}
+                    <li>Keine Berechtigungen vergeben.</li>
+                {% endif %}
+                {% for perm in current_perms %}
+                <li style="display: flex; justify-content: space-between; align-items: center;">
+                    <span>
+                        {% if perm.entity_type == 'role' %}
+                            <i class="fa-solid fa-users" title="Rolle"></i>
+                            {% set role = current_guild.get_role(perm.entity_id) %}
+                            {{ role.name if role else 'Unbekannte Rolle' }}
+                        {% else %}
+                            <i class="fa-solid fa-user" title="Benutzer"></i>
+                            {% set member = current_guild.get_member(perm.entity_id) %}
+                            {{ member.display_name if member else 'Unbekannter Benutzer' }}
+                        {% endif %}
+                    </span>
+                    <form method="POST" style="margin: 0;" onsubmit="return confirm('Sicher, dass du diese Berechtigung entfernen möchtest?');">
+                         <input type="hidden" name="action" value="remove">
+                         <input type="hidden" name="plugin_name" value="{{ plugin.name }}">
+                         <input type="hidden" name="entity_type" value="{{ perm.entity_type }}">
+                         <input type="hidden" name="entity_id" value="{{ perm.entity_id }}">
+                         <button type="submit" title="Entfernen" style="background: none; border: none; color: var(--danger-color); cursor: pointer; font-size: 1rem;"><i class="fa-solid fa-trash"></i></button>
+                    </form>
+                </li>
+                {% endfor %}
+            </ul>
+        </div>
+    {% endfor %}
+    </div>
+{% endif %}
+
+<script>
+document.addEventListener('DOMContentLoaded', () => {
+    const typeSelect = document.getElementById('entity_type');
+    const roleSelect = document.getElementById('entity_id_role');
+    const userSelect = document.getElementById('entity_id_user');
+    const finalEntityIdInput = document.getElementById('final_entity_id');
+    const form = document.querySelector('form[method="POST"]');
+
+    function updateSelection() {
+        if (typeSelect.value === 'user') {
+            userSelect.style.display = 'block';
+            roleSelect.style.display = 'none';
+        } else {
+            userSelect.style.display = 'none';
+            roleSelect.style.display = 'block';
+        }
+    }
+
+    typeSelect.addEventListener('change', updateSelection);
+
+    form.addEventListener('submit', () => {
+        if (typeSelect.value === 'user') {
+            finalEntityIdInput.value = userSelect.value;
+        } else {
+            finalEntityIdInput.value = roleSelect.value;
+        }
+    });
+
+    // Initial state setup
+    updateSelection();
+});
+</script>
+{% endblock %}

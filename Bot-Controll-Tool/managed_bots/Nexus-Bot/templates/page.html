@@ -1,0 +1,14 @@
+{% extends "layout.html" %}
+
+{% block content %}
+<div class="iframe-header">
+    <h1>{{ page_name }}</h1>
+    <a href="{{ iframe_url }}" target="_blank" class="external-link-btn" title="In neuem Tab öffnen">
+        <i class="fa-solid fa-arrow-up-right-from-square"></i>
+    </a>
+</div>
+
+<div class="iframe-container">
+    <iframe src="{{ iframe_url }}" frameborder="0"></iframe>
+</div>
+{% endblock %}

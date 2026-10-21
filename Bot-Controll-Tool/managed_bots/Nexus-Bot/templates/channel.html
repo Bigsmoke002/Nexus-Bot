@@ -1,0 +1,24 @@
+{% extends "layout.html" %}
+
+{% block content %}
+<h1><i class="fa-solid fa-comments" style="opacity: 0.7;"></i> Nachrichten in #{{ channel.name }}</h1>
+<p style="margin-bottom: 2rem; opacity: 0.7;">Die letzten 100 in der Datenbank gespeicherten Nachrichten.</p>
+
+<div class="card">
+    <ul class="log-list" style="max-height: calc(100vh - 15rem); font-size: 0.95rem;">
+        {% for message in messages %}
+            <li style="padding: 0.8rem 0; display: flex; flex-direction: column; gap: 5px;">
+                <div>
+                    <strong style="color: var(--primary-color);">{{ message.author_name }}</strong>
+                    <span style="opacity: 0.5; font-size: 0.8em; margin-left: 10px;">
+                        {{ message.timestamp | replace('T', ' ') | truncate(19, True, '') }}
+                    </span>
+                </div>
+                <div style="color: var(--text-color); white-space: pre-wrap; word-wrap: break-word;">{{ message.content }}</div>
+            </li>
+        {% else %}
+            <li>Für diesen Kanal wurden keine Nachrichten in der Datenbank gefunden.</li>
+        {% endfor %}
+    </ul>
+</div>
+{% endblock %}

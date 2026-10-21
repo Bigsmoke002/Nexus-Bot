@@ -1,0 +1,272 @@
+{% extends "layout.html" %}
+
+{% block content %}
+<style>
+    .info-box {
+        padding: 1rem;
+        border-radius: 8px;
+        margin: 1.5rem 0;
+        border-left: 5px solid;
+    }
+    .info-box.tip {
+        background-color: rgba(125, 207, 255, 0.1);
+        border-color: var(--secondary-color);
+    }
+    .info-box.warning {
+        background-color: rgba(224, 175, 104, 0.1);
+        border-color: var(--warning-color);
+    }
+    .info-box strong {
+        color: var(--text-color);
+        display: block;
+        margin-bottom: 0.5rem;
+    }
+    table.command-table {
+        width: 100%;
+        border-collapse: collapse;
+        margin-top: 1rem;
+    }
+    .command-table th, .command-table td {
+        text-align: left;
+        padding: 0.8rem;
+        border-bottom: 1px solid var(--border-color);
+    }
+    .command-table th {
+        color: var(--primary-color);
+    }
+    .command-table code {
+        font-size: 0.9em;
+    }
+</style>
+
+<h1><i class="fa-solid fa-book-open"></i> Dokumentation & Handbuch</h1>
+<p style="margin-bottom: 2rem; opacity: 0.7;">Ein umfassender Leitfaden zum Phoenix Bot Framework, seiner Architektur und seinen Plugins. Version 1.0.</p>
+
+<div class="card" style="margin-bottom: 1.5rem;">
+    <h2>Inhaltsverzeichnis</h2>
+    <ul style="list-style: none; padding-left: 0; line-height: 1.8;">
+        <li><a href="#quickstart" style="color: var(--secondary-color);">Schnellstart-Anleitung</a></li>
+        <li><a href="#philosophy" style="color: var(--secondary-color);">1. Kernphilosophie & Technologie-Stack</a></li>
+        <li><a href="#setup" style="color: var(--secondary-color);">2. Installation & Erstkonfiguration</a></li>
+        <li><a href="#dashboard-guide" style="color: var(--secondary-color);">3. Das Web-Dashboard: Ein Benutzerhandbuch</a></li>
+        <li><a href="#commands" style="color: var(--secondary-color);">4. Befehls-Referenz (Alle Plugins)</a></li>
+        <li><a href="#dev-guide" style="color: var(--secondary-color);">5. Entwickler-Handbuch: Eigene Plugins erstellen</a></li>
+        <li><a href="#glossary" style="color: var(--secondary-color);">6. Glossar</a></li>
+    </ul>
+</div>
+
+<div class="card" style="margin-bottom: 1.5rem;">
+    <h2 id="quickstart">🚀 Schnellstart-Anleitung (für Eilige)</h2>
+    <ol style="padding-left: 1.5rem; line-height: 1.8;">
+        <li>Stelle sicher, dass Python 3.8+ installiert ist.</li>
+        <li>Führe <code>pip install -r requirements.txt</code> aus.</li>
+        <li>Führe <code>python launcher.py</code> aus, um die <code>config.json</code> zu erstellen.</li>
+        <li>Trage deinen Discord Bot Token und ein sicheres Passwort in die <code>config.json</code> ein.</li>
+        <li>Aktiviere alle Privileged Gateway Intents für deinen Bot im Discord Developer Portal.</li>
+        <li>Starte den Bot erneut mit <code>python launcher.py</code>.</li>
+        <li>Greife lokal auf das Dashboard zu via <code>http://127.0.0.1:5000</code>.</li>
+    </ol>
+</div>
+
+<div class="card" style="margin-bottom: 1.5rem;">
+    <h2 id="philosophy">1. Kernphilosophie & Technologie-Stack</h2>
+    <p>Dieses Framework wurde nach drei Kernprinzipien entwickelt, um maximale Stabilität, Sicherheit und Erweiterbarkeit zu gewährleisten.</p>
+    <ul>
+        <li><strong>Vollständige Modularität:</strong> Jede Funktion ist ein "Plugin" (Cog). Ein Plugin kann einfach durch Hinzufügen oder Entfernen seines Ordners (de-)aktiviert werden.</li>
+        <li><strong>Strikte Datentrennung:</strong> Der Bot-Kern (`bot.py`, `webapp.py`) ist strikt von den Daten getrennt. Der Kern hat seine eigene Datenbank (`database/bot_main.db`), und jedes Plugin ist dafür verantwortlich, seine eigenen Daten in einem dedizierten Ordner (`plugin_data/PluginName/`) zu verwalten.</li>
+        <li><strong>Nahtlose & sichere Web-Integration:</strong> Jedes Plugin kann seine eigenen Webseiten und API-Routen zum zentralen Web-Dashboard hinzufügen, ohne den Kern-Code zu verändern.</li>
+    </ul>
+    <h3>Technologie-Stack</h3>
+    <ul>
+        <li><strong>Bot-Framework:</strong> Python 3.8+ mit <code>discord.py</code></li>
+        <li><strong>Web-Framework:</strong> <code>Flask</code> für das Dashboard und die Plugin-Webseiten.</li>
+        <li><strong>Datenbank:</strong> <code>SQLite3</code> für eine einfache, dateibasierte Speicherung.</li>
+        <li><strong>Prozess-Management:</strong> Ein nativer Python <code>subprocess</code>-Launcher.</li>
+    </ul>
+</div>
+
+
+<div class="card" style="margin-bottom: 1.5rem;">
+    <h2 id="setup">2. Installation & Erstkonfiguration</h2>
+    <p>Eine schrittweise Anleitung zur Inbetriebnahme des Bots.</p>
+    <ol style="padding-left: 1.5rem; line-height: 1.8;">
+        <li><strong>Abhängigkeiten installieren:</strong> Führe <code>pip install -r requirements.txt</code> aus.</li>
+        <li>
+            <strong>Discord Bot einrichten (WICHTIG):</strong>
+            <ul>
+                <li>Gehe zum <a href="https://discord.com/developers/applications" target="_blank" style="color: var(--secondary-color);">Discord Developer Portal</a> und erstelle eine neue Anwendung.</li>
+                <li>Gehe zum Tab **"Bot"**, klicke **"Add Bot"** und dann **"Reset Token"**, um deinen Token zu kopieren. Behandle diesen Token wie ein Passwort!</li>
+                <li>Aktiviere unter **"Privileged Gateway Intents"** alle drei Schalter (Presence, Server Members, Message Content). Ohne diese wird der Bot nicht starten.</li>
+                <li>Gehe zu **"OAuth2" -> "URL Generator"**, wähle `bot` und `applications.commands` aus, gib dem Bot `Administrator`-Rechte und lade ihn mit dem generierten Link auf deine Server ein.</li>
+            </ul>
+        </li>
+        <li><strong>Bot erstmalig starten:</strong> Führe <code>python launcher.py</code> aus. Eine <code>config.json</code> und alle Daten-Ordner werden automatisch erstellt.</li>
+        <li><strong>Konfigurieren:</strong> Öffne die <code>config.json</code> und trage deinen **Bot-Token** und ein sicheres **Dashboard-Passwort** ein.</li>
+        <li><strong>Test-Server ID eintragen:</strong> Trage unter <code>development_guild_id</code> die ID deines Haupt- oder Test-Servers ein. Dies ist entscheidend für den lokalen Admin-Zugriff und den schnellen Befehls-Sync im Entwicklungsmodus.</li>
+    </ol>
+    <h3>Troubleshooting bei der Installation</h3>
+    <ul>
+        <li><strong>Fehler `PrivilegedIntentsRequired`:</strong> Du hast die Intents im Developer Portal nicht aktiviert (siehe Schritt 2.3).</li>
+        <li><strong>Slash-Befehle erscheinen nicht:</strong> Entweder bist du im Produktionsmodus und musst bis zu einer Stunde warten, oder die `development_guild_id` ist falsch.</li>
+        <li><strong>`403 Forbidden` im Dashboard:</strong> Du versuchst als externer Benutzer auf eine Admin-Seite zuzugreifen. Nutze den lokalen Admin-Login.</li>
+    </ul>
+</div>
+
+<div class="card" style="margin-bottom: 1.5rem;">
+    <h2 id="dashboard-guide">3. Das Web-Dashboard: Ein Benutzerhandbuch</h2>
+    
+    <h3 id="auth" style="color: var(--primary-color);">Das Zwei-Wege-Login-System erklärt</h3>
+    <p>Der Zugriff auf das Dashboard ist dual geregelt:</p>
+    <ul>
+        <li><strong>Lokaler Admin-Zugriff:</strong> Wenn du das Dashboard von demselben Rechner aus aufrufst, auf dem der Bot läuft (über <code>http://127.0.0.1:5000</code>), wirst du zu einer Passwort-Login-Seite geleitet. Nach der Eingabe des Passworts aus der <code>config.json</code> bist du als **lokaler Admin** eingeloggt und hast vollen Zugriff auf alle Funktionen.</li>
+        <li><strong>Externer Benutzer-Zugriff:</strong> Greift jemand von außerhalb auf die URL zu, muss die Authentifizierung zwingend über Discord erfolgen. Ein direkter Aufruf der Seiten ist nicht möglich. Externe Benutzer müssen über das <code>/accesspanel</code> in Discord einen sicheren Einmal-Link anfordern und haben nur Zugriff auf die Plugins, für die sie explizit freigeschaltet wurden.</li>
+    </ul>
+
+    <h3 id="dashboard-pages" style="color: var(--primary-color);">Seiten-Übersicht & Funktionen</h3>
+    <dl>
+        <dt><strong>Dashboard</strong></dt>
+        <dd>Die Hauptseite zeigt Echtzeit-Statistiken über den Bot und die Systemauslastung.</dd>
+        <dt><strong>Plugins</strong></dt>
+        <dd>Zeigt eine Liste aller erfolgreich geladenen Plugins (Cogs).</dd>
+        <dt><strong>Berechtigungen</strong></dt>
+        <dd>Eine Admin-Seite zur Verwaltung der Zugriffsrechte auf private Web-Plugins für externe Benutzer.</dd>
+        <dt><strong>Konfiguration</strong></dt>
+        <dd>Eine Admin-Seite zur Änderung von globalen Bot-Einstellungen.</dd>
+        <dt><strong>Status</strong></dt>
+        <dd>Ändere den Online-Status und die Aktivität des Bots. Diese Einstellung wird in der Datenbank gespeichert.</dd>
+        <dt><strong>Server-Browser</strong></dt>
+        <dd>In der linken Seitenleiste werden alle Server aufgelistet. Ein Klick auf einen Server zeigt dessen Kanäle an.</dd>
+    </dl>
+    
+    <h3 id="permissions" style="color: var(--primary-color);">Tutorial: Berechtigungen verwalten</h3>
+    <p>Diese Seite ist das Herzstück der Zugriffsverwaltung und nur für lokale Admins sichtbar.</p>
+    <ol style="padding-left: 1.5rem;">
+        <li><strong>Server-Auswahl:</strong> Wähle oben rechts aus dem Dropdown-Menü den Discord-Server aus. Die Seite lädt neu.</li>
+        <li><strong>Rechte hinzufügen:</strong> Wähle für ein Plugin "Rolle" oder "Benutzer", wähle die Entität aus der Liste und klicke auf "Hinzufügen".</li>
+        <li><strong>Rechte entfernen:</strong> Klicke auf das Mülleimer-Icon neben einem Eintrag.</li>
+    </ol>
+    <div class="info-box tip"><strong>Pro-Tipp:</strong> Verwalte Rechte bevorzugt über Rollen statt über einzelne Benutzer. Das ist bei größeren Servern deutlich übersichtlicher.</div>
+</div>
+
+<div class="card" style="margin-bottom: 1.5rem;">
+    <h2 id="commands">4. Befehls-Referenz (Alle Plugins)</h2>
+    <p>Alle Bot-Befehle werden durch Plugins bereitgestellt.</p>
+
+    <h3 id="plugin-access" style="color: var(--secondary-color);"><i class="fa-solid fa-key"></i> Access Panel Plugin</h3>
+    <p>Dieses Kern-Plugin verwaltet den sicheren Web-Zugriff für externe Benutzer.</p>
+    <table class="command-table">
+        <thead><tr><th>Befehl</th><th>Beschreibung</th><th>Berechtigung</th></tr></thead>
+        <tbody>
+            <tr>
+                <td><code>/accesspanel create</code></td>
+                <td>Erstellt ein Panel in einem Kanal mit Buttons für jedes private Web-Tool. Benutzer klicken hier, um ihren persönlichen "Magic Link" anzufordern.</td>
+                <td>Admin</td>
+            </tr>
+        </tbody>
+    </table>
+
+    <h3 id="plugin-verification" style="color: var(--secondary-color); margin-top: 2rem;"><i class="fa-solid fa-user-check"></i> Verification Plugin</h3>
+    <p>Ein mehrstufiges Verifizierungssystem, um Mitglieder zu authentifizieren.</p>
+    <table class="command-table">
+        <thead><tr><th>Befehl</th><th>Beschreibung</th><th>Berechtigung</th></tr></thead>
+        <tbody>
+            <tr>
+                <td><code>/verifypanel create</code></td>
+                <td>Erstellt das Verifizierungs-Panel in einem Kanal.</td>
+                <td>Admin</td>
+            </tr>
+            <tr>
+                <td><code>/verifyconfig level</code></td>
+                <td>Setzt das Sicherheitslevel (1-4).</td>
+                <td>Admin</td>
+            </tr>
+            <tr>
+                <td><code>/verifyconfig role</code></td>
+                <td>Legt die Rolle fest, die Mitglieder nach der Verifizierung erhalten.</td>
+                <td>Admin</td>
+            </tr>
+            <tr>
+                <td><code>/verifyconfig joinrole</code></td>
+                <td>Legt die Rolle fest, die Mitglieder beim Betreten erhalten.</td>
+                <td>Admin</td>
+            </tr>
+            <tr>
+                <td><code>/verifyconfig removerole</code></td>
+                <td>Legt die Rolle fest, die nach der Verifizierung entfernt wird.</td>
+                <td>Admin</td>
+            </tr>
+            <tr>
+                <td><code>/unverify</code></td>
+                <td>Hebt die Verifizierung eines Mitglieds auf.</td>
+                <td>Admin</td>
+            </tr>
+        </tbody>
+    </table>
+</div>
+
+<div class="card">
+    <h2 id="dev-guide">5. Entwickler-Handbuch: Eigene Plugins erstellen</h2>
+    
+    <h3 id="dev-anatomy">Die Anatomie eines modernen Plugins</h3>
+    <p>Ein Plugin ist ein Ordner in <code>cogs/</code>, der alle seine Komponenten bündelt: <code>cog.py</code> (Discord-Logik), optional eine <code>web.py</code> (Web-Logik) und einen <code>templates/</code>-Ordner. Der Bot findet und lädt diese automatisch.</p>
+
+    <h3 id="dev-concepts" style="color: var(--primary-color);">Wichtige Entwickler-Konzepte</h3>
+    <ul>
+        <li><strong>Datenbanken:</strong> Jedes Plugin sollte seine eigene SQLite-DB in <code>plugin_data/PLUGINNAME/</code> erstellen und verwalten.</li>
+        <li><strong>Web-Plugins (Öffentlich vs. Privat):</strong> Standardmäßig ist jede Plugin-Webseite privat. Um eine Seite öffentlich zu machen, füge <code>blueprint.is_public = True</code> in die <code>web.py</code> ein.</li>
+        <li><strong>Slash-Befehle (Dev vs. Prod):</strong> In der <code>config.json</code> steuert <code>"clear_commands_on_startup"</code> das Verhalten. <code>true</code> für sofortige Updates auf dem Test-Server, <code>false</code> für globale Updates (bis zu 1h Verzögerung).</li>
+    </ul>
+    
+    <h3 id="dev-example" style="color: var(--primary-color);">Tutorial: Ein komplettes "ToDo"-Plugin bauen</h3>
+    <div class="info-box warning"><strong>Hinweis:</strong> Dieses Beispiel ist fiktiv und dient der Veranschaulichung der Architektur. Der Code müsste für einen echten Einsatz vervollständigt werden.</div>
+    <p><strong>1. Ordnerstruktur:</strong> <code>cogs/todo/</code>, <code>cogs/todo/templates/</code></p>
+    <p><strong>2. `cog.py` (Discord-Befehle & DB-Setup):</strong></p>
+    <pre><code># cogs/todo/cog.py
+from discord.ext import commands, app_commands
+# ... weitere Imports ...
+
+class ToDo(commands.Cog):
+    def __init__(self, bot):
+        self.bot = bot
+        self.db_path = "plugin_data/ToDo/tasks.db"
+        # ... (Logik zum Erstellen der DB und Tabelle)
+    
+    @app_commands.command(name="todo", description="Fügt eine neue Aufgabe hinzu.")
+    async def add_task(self, interaction, aufgabe: str):
+        # ... (Logik zum Speichern der Aufgabe in der DB)
+        await interaction.response.send_message(f"Aufgabe '{aufgabe}' hinzugefügt!", ephemeral=True)
+
+async def setup(bot): await bot.add_cog(ToDo(bot))</code></pre>
+
+    <p><strong>3. `web.py` (Web-Logik):</strong></p>
+    <pre><code># cogs/todo/web.py
+from flask import Blueprint, render_template, request, session
+import sqlite3
+
+blueprint = Blueprint('todo_web', __name__, template_folder='templates', url_prefix='/todo')
+blueprint.display_name = "ToDo Liste"
+
+db_path = "plugin_data/ToDo/tasks.db"
+
+@blueprint.route('/')
+def index_page():
+    user_id = session.get('user_id')
+    # ... (Logik zum Laden der Aufgaben aus der DB)
+    tasks = [...]
+    return render_template('todo.html', tasks=tasks)</code></pre>
+</div>
+
+<div class="card" style="margin-top: 1.5rem;">
+    <h2 id="glossary">6. Glossar</h2>
+    <dl>
+        <dt><strong>Cog / Plugin</strong></dt>
+        <dd>Eine in sich geschlossene Funktionserweiterung für den Bot, die in einem eigenen Ordner unter <code>cogs/</code> lebt.</dd>
+        <dt><strong>Blueprint</strong></dt>
+        <dd>Ein modulares Web-Modul von Flask. In diesem Projekt enthält jede <code>web.py</code> eines Plugins ein Blueprint, das dem Haupt-Webserver neue Seiten hinzufügt.</dd>
+        <dt><strong>Session</strong></dt>
+        <dd>Eine temporäre, serverseitige Speicherung von Benutzerdaten im Webserver, z.B. ob ein Benutzer eingeloggt ist. Sie wird durch ein Cookie im Browser des Benutzers identifiziert.</dd>
+        <dt><strong>Token (Auth-Token)</strong></dt>
+        <dd>Ein sicherer, zufälliger und zeitlich begrenzter Code, der vom Bot in Discord erstellt wird, um einem Benutzer einen einmaligen Login auf der Webseite zu ermöglichen.</dd>
+    </dl>
+</div>
+{% endblock %}

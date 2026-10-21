@@ -1,0 +1,43 @@
+{% extends "layout.html" %}
+
+{% block content %}
+<h1><i class="fa-solid fa-globe"></i> Web-Plugins verwalten</h1>
+<p style="margin-bottom: 2rem; opacity: 0.7;">Aktiviere hier die Web-Schnittstellen deiner Plugins und lege ihren Zugriffs-Status fest.</p>
+
+<div class="card">
+    <form method="POST">
+        <table style="width: 100%; border-collapse: collapse;">
+            <thead>
+                <tr style="border-bottom: 1px solid var(--border-color);">
+                    <th style="padding: 1rem; text-align: left;">Plugin</th>
+                    <th style="padding: 1rem; text-align: center;">Web-Zugriff Aktiviert</th>
+                    <th style="padding: 1rem; text-align: center;">Öffentlich (ohne Login)</th>
+                </tr>
+            </thead>
+            <tbody>
+            {% for plugin in plugins %}
+                <tr style="border-bottom: 1px solid var(--border-color);">
+                    <td style="padding: 1rem;"><strong>{{ plugin.display_name }}</strong><br><small style="opacity: 0.6;">({{ plugin.name }})</small></td>
+                    <td style="padding: 1rem; text-align: center;">
+                        <input type="checkbox" name="enabled_{{ plugin.name }}" {% if plugin.is_enabled %}checked{% endif %} style="transform: scale(1.5);">
+                    </td>
+                    <td style="padding: 1rem; text-align: center;">
+                        <input type="checkbox" name="public_{{ plugin.name }}" {% if plugin.is_public %}checked{% endif %} style="transform: scale(1.5);">
+                    </td>
+                </tr>
+            {% else %}
+                <tr>
+                    <td colspan="3" style="padding: 1rem; text-align: center;">Keine Web-Plugins gefunden.</td>
+                </tr>
+            {% endfor %}
+            </tbody>
+        </table>
+        <div style="text-align: right; margin-top: 1.5rem;">
+            <button type="submit" class="btn-primary"><i class="fa-solid fa-save"></i> Einstellungen Speichern</button>
+        </div>
+    </form>
+</div>
+<div class="info-box tip" style="margin-top: 1.5rem;">
+    <strong>Hinweis:</strong> Private Plugins (nicht öffentlich) benötigen zusätzlich Berechtigungen, die auf der Seite <a href="{{ url_for('manage_permissions') }}" style="color: var(--secondary-color);">Berechtigungen</a> vergeben werden.
+</div>
+{% endblock %}

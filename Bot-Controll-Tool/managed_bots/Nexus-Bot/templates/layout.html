@@ -1,0 +1,63 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Phoenix Bot Dashboard</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css">
+</head>
+<body>
+    <div class="container">
+        <aside class="sidebar">
+            <div class="sidebar-header">
+                <h2><i class="fa-solid fa-rocket"></i> Phoenix Bot</h2>
+            </div>
+            <nav>
+                <ul>
+                    <li><a href="{{ url_for('dashboard') }}" class="{{ 'active' if request.endpoint == 'dashboard' else '' }}"><i class="fa-solid fa-chart-line"></i> Dashboard</a></li>
+                    <li><a href="{{ url_for('plugins') }}" class="{{ 'active' if request.endpoint == 'plugins' else '' }}"><i class="fa-solid fa-puzzle-piece"></i> Geladene Plugins</a></li>
+                    <li><a href="{{ url_for('manage_web_plugins') }}" class="{{ 'active' if request.endpoint == 'manage_web_plugins' else '' }}"><i class="fa-solid fa-globe"></i> Web-Plugins</a></li>
+                    <li><a href="{{ url_for('manage_permissions') }}" class="{{ 'active' if request.endpoint == 'manage_permissions' else '' }}"><i class="fa-solid fa-shield-halved"></i> Berechtigungen</a></li>
+                    <li><a href="{{ url_for('config') }}" class="{{ 'active' if request.endpoint == 'config' else '' }}"><i class="fa-solid fa-gears"></i> Konfiguration</a></li>
+                    <li><a href="{{ url_for('status') }}" class="{{ 'active' if request.endpoint == 'status' else '' }}"><i class="fa-solid fa-circle-user"></i> Status</a></li>
+                    <li><a href="{{ url_for('docs') }}" class="{{ 'active' if request.endpoint == 'docs' else '' }}"><i class="fa-solid fa-book"></i> Dokumentation</a></li>
+                </ul>
+                
+                {% if all_guilds %}
+                <h3 class="sidebar-subtitle">Server</h3>
+                <div class="server-list">
+                    <ul>
+                        {% for guild in all_guilds %}
+                            <li>
+                                <a href="{{ url_for('view_guild', guild_id=guild.id) }}">
+                                    <i class="fa-solid fa-server"></i>
+                                    <span>{{ guild.name }}</span>
+                                    <span class="user-count">{{ guild.member_count }}</span>
+                                </a>
+                            </li>
+                        {% endfor %}
+                    </ul>
+                </div>
+                {% endif %}
+            </nav>
+            <div class="sidebar-footer">
+                <form action="{{ url_for('restart') }}" method="POST" onsubmit="return confirm('Bist du sicher, dass du den Bot neustarten möchtest?');">
+                    <button type="submit" class="restart-btn"><i class="fa-solid fa-power-off"></i> Bot Neustarten</button>
+                </form>
+                 <a href="{{ url_for('logout') }}" class="logout-link"><i class="fa-solid fa-right-from-bracket"></i> Logout</a>
+            </div>
+        </aside>
+        <main class="content">
+            {% with messages = get_flashed_messages(with_categories=true) %}
+                {% if messages %}
+                    {% for category, message in messages %}
+                        <div class="flash {{ category }}">{{ message }}</div>
+                    {% endfor %}
+                {% endif %}
+            {% endwith %}
+            {% block content %}{% endblock %}
+        </main>
+    </div>
+</body>
+</html>

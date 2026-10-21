@@ -1,0 +1,45 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{% block title %}Phoenix Controller{% endblock %}</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css">
+    <script src="https://cdn.socket.io/4.7.5/socket.io.min.js"></script>
+</head>
+<body>
+    <div class="container">
+        <aside class="sidebar">
+            <div class="sidebar-header">
+                <h2><i class="fa-solid fa-fire"></i> Phoenix Controller</h2>
+            </div>
+            <nav>
+                <ul>
+                    <li><a href="{{ url_for('main.dashboard') }}"><i class="fa-solid fa-chart-line"></i> Dashboard</a></li>
+                    {% if current_user.is_authenticated and current_user.is_admin %}
+                    <li><a href="{{ url_for('admin.dashboard') }}"><i class="fa-solid fa-user-shield"></i> Admin Panel</a></li>
+                    {% endif %}
+                </ul>
+            </nav>
+            <div class="sidebar-footer">
+                 {% if current_user.is_authenticated %}
+                 <span class="user-info">Eingeloggt als: {{ current_user.username }}</span>
+                 <a href="{{ url_for('auth.logout') }}" class="logout-link"><i class="fa-solid fa-right-from-bracket"></i> Logout</a>
+                 {% endif %}
+            </div>
+        </aside>
+        <main class="content">
+            {% with messages = get_flashed_messages(with_categories=true) %}
+                {% if messages %}
+                    {% for category, message in messages %}
+                        <div class="flash {{ category }}">{{ message }}</div>
+                    {% endfor %}
+                {% endif %}
+            {% endwith %}
+            {% block content %}{% endblock %}
+        </main>
+    </div>
+    {% block scripts %}{% endblock %}
+</body>
+</html>

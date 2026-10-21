@@ -1,0 +1,67 @@
+{% extends "layout.html" %}
+{% block title %}File Browser - {{ bot.name }}{% endblock %}
+
+{% block content %}
+<div class="file-browser-grid">
+    <div class="file-tree card">
+        <h3><i class="fa-solid fa-folder-open"></i> Dateien für {{ bot.name }}</h3>
+        <nav class="breadcrumbs">
+            <a href="{{ url_for('files.browse', bot_id=bot.id) }}">/</a>
+            {% for crumb in breadcrumbs %}
+                <a href="{{ url_for('files.browse', bot_id=bot.id, subpath=crumb.path) }}">{{ crumb.name }}</a> /
+            {% endfor %}
+        </nav>
+        <ul>
+            {% if current_path %}
+            <li>
+                <a href="{{ url_for('files.browse', bot_id=bot.id, subpath=breadcrumbs[-2].path if breadcrumbs|length > 1 else '') }}">
+                    <i class="fa-solid fa-arrow-left"></i> ..
+                </a>
+            </li>
+            {% endif %}
+            {% for item in items %}
+            <li>
+                <a href="{{ url_for('files.browse', bot_id=bot.id, subpath=item.path) }}">
+                    <i class="fa-solid {{ 'fa-folder' if item.is_dir else 'fa-file-lines' }}"></i>
+                    {{ item.name }}
+                </a>
+            </li>
+            {% endfor %}
+        </ul>
+    </div>
+    <div class="file-editor card">
+        {% if content is not none %}
+        <h3>Bearbeite: {{ current_path }}</h3>
+        <textarea id="file-content">{{ content }}</textarea>
+        <button class="btn-primary" onclick="saveFile()">Speichern</button>
+        {% else %}
+        <h3>Wähle eine Datei zum Bearbeiten aus</h3>
+        <p>Du darfst nur auf die <code>config.json</code> und den <code>cogs/</code> Ordner zugreifen.</p>
+        {% endif %}
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+    async function saveFile() {
+        const content = document.getElementById('file-content').textContent;
+        const path = "{{ current_path }}";
+        
+        try {
+            const response = await fetch("{{ url_for('files.save_file', bot_id=bot.id, filepath=current_path) }}", {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify({ content: content })
+            });
+            const result = await response.json();
+            alert(result.message);
+        } catch (error) {
+            console.error("Save error:", error);
+            alert("Ein Fehler ist aufgetreten.");
+        }
+    }
+</script>
+{% endblock %}

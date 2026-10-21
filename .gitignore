@@ -1,0 +1,11 @@
+__pycache__/
+*.pyc
+venv/
+config.json
+*.db
+instance/
+database/
+plugin_data/
+Bot-Controll-Tool/managed_bots/Nexus-Bot/cogs/VRC-Bot-Control/data/
+*.log
+.env

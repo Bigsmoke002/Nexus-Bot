@@ -1,0 +1,139 @@
+{% extends "layout.html" %}
+
+{% block content %}
+<h1><i class="fa-solid fa-chart-line"></i> Dashboard</h1>
+
+<div id="bot-status-banner" class="card starting">
+    <p><i id="bot-status-icon" class="fa-solid fa-spinner fa-spin"></i> <span id="bot-status-text">Stelle Verbindung zu Discord her...</span></p>
+</div>
+
+<div id="main-content-wrapper" class="content-loading">
+    <div class="grid">
+        <div class="card">
+            <h3><i class="fa-solid fa-clock"></i> Laufzeit</h3>
+            <p id="stats-uptime" class="value">--</p>
+        </div>
+        <div class="card">
+            <h3><i class="fa-solid fa-server"></i> Server</h3>
+            <p id="stats-guilds" class="value">--</p>
+        </div>
+        <div class="card">
+            <h3><i class="fa-solid fa-users"></i> Benutzer</h3>
+            <p id="stats-users" class="value">--</p>
+        </div>
+        <div class="card">
+            <h3><i class="fa-solid fa-puzzle-piece"></i> Plugins</h3>
+            <p id="stats-cogs" class="value">--</p>
+        </div>
+    </div>
+
+    <h2 style="margin-top: 2rem;">System-Auslastung</h2>
+    <div class="grid">
+        <div class="card">
+            <h3><i class="fa-solid fa-memory"></i> Bot RAM-Nutzung</h3>
+            <p id="stats-bot-ram" class="value">-- MB</p>
+        </div>
+        <div class="card">
+            <h3><i class="fa-solid fa-microchip"></i> Bot CPU-Nutzung</h3>
+            <p id="stats-bot-cpu-value" class="value">-- %</p>
+            <div class="progress-bar">
+                <div id="stats-bot-cpu-bar" style="width: 0%;"></div>
+            </div>
+        </div>
+        <div class="card">
+            <h3><i class="fa-solid fa-server"></i> Server RAM-Nutzung</h3>
+            <p id="stats-server-ram-value" class="value">-- %</p>
+            <div class="progress-bar">
+                <div id="stats-server-ram-bar" style="width: 0%;"></div>
+            </div>
+        </div>
+        <div class="card">
+            <h3><i class="fa-solid fa-server"></i> Server CPU-Nutzung</h3>
+            <p id="stats-server-cpu-value" class="value">-- %</p>
+            <div class="progress-bar">
+                <div id="stats-server-cpu-bar" style="width: 0%;"></div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<h2 style="margin-top: 2rem;">Letzte Ereignisse</h2>
+<div class="card">
+    <ul class="log-list">
+        {% for log in logs %}
+            <li>
+                <span class="{{ log['level'] }}">[{{ log['level'] }}]</span>
+                <span style="color: #999;">[{{ log['timestamp'].split('.')[0] | replace('T', ' ') }}]</span>
+                <span style="color: #aaa;">[{{ log['source'] }}]</span>
+                {{ log['message'] }}
+            </li>
+        {% else %}
+            <li>Keine Logs gefunden.</li>
+        {% endfor %}
+    </ul>
+</div>
+
+<script>
+    // Globaler Status, um zu verhindern, dass die "Online"-Nachricht wiederholt wird
+    let botIsReady = false;
+
+    async function updateStats() {
+        try {
+            const response = await fetch('/api/stats');
+            const data = await response.json();
+
+            if (data.status === 'online') {
+                // Wenn der Bot zum ersten Mal als "online" gemeldet wird
+                if (!botIsReady) {
+                    botIsReady = true;
+                    const banner = document.getElementById('bot-status-banner');
+                    const icon = document.getElementById('bot-status-icon');
+                    const text = document.getElementById('bot-status-text');
+                    const content = document.getElementById('main-content-wrapper');
+
+                    // Banner auf "Online" aktualisieren
+                    banner.classList.remove('starting');
+                    banner.classList.add('online');
+                    icon.className = 'fa-solid fa-check-circle';
+                    text.textContent = 'Bot ist vollständig online und einsatzbereit!';
+                    
+                    // Inhalt freischalten
+                    content.classList.remove('content-loading');
+                    
+                    // Banner nach 3 Sekunden ausblenden
+                    setTimeout(() => { banner.style.display = 'none'; }, 3000);
+                }
+
+                // Aktualisiere die Statistiken mit den empfangenen Daten
+                const stats = data.data;
+                document.getElementById('stats-uptime').textContent = stats.uptime;
+                document.getElementById('stats-guilds').textContent = stats.guild_count;
+                document.getElementById('stats-users').textContent = stats.total_users;
+                document.getElementById('stats-cogs').textContent = stats.loaded_cogs.length;
+                document.getElementById('stats-bot-ram').textContent = `${stats.bot_ram_mb} MB`;
+                
+                document.getElementById('stats-bot-cpu-value').textContent = `${stats.bot_cpu_percent} %`;
+                document.getElementById('stats-bot-cpu-bar').style.width = `${stats.bot_cpu_percent}%`;
+                
+                document.getElementById('stats-server-ram-value').textContent = `${stats.server_ram_percent} %`;
+                document.getElementById('stats-server-ram-bar').style.width = `${stats.server_ram_percent}%`;
+
+                document.getElementById('stats-server-cpu-value').textContent = `${stats.server_cpu_percent} %`;
+                document.getElementById('stats-server-cpu-bar').style.width = `${stats.server_cpu_percent}%`;
+
+            } else {
+                // Wenn der Bot immer noch startet, den Text im Banner aktualisieren
+                document.getElementById('bot-status-text').textContent = data.message;
+            }
+        } catch (error) {
+            console.error('Fehler beim Abrufen der Bot-Statistiken:', error);
+            document.getElementById('bot-status-text').textContent = 'Verbindung zum Bot-Backend fehlgeschlagen.';
+        }
+    }
+
+    // Starte das regelmäßige Abrufen der Statistiken
+    setInterval(updateStats, 2000); // Alle 2 Sekunden abfragen
+    // Rufe die Funktion einmal direkt beim Laden der Seite auf
+    document.addEventListener('DOMContentLoaded', updateStats);
+</script>
+{% endblock %}

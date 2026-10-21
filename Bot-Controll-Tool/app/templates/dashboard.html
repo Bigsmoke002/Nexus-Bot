@@ -1,0 +1,86 @@
+{% extends "layout.html" %}
+{% block title %}Dashboard{% endblock %}
+
+{% block content %}
+<h1><i class="fa-solid fa-robot"></i> Deine Bots</h1>
+
+{% if not bots %}
+<div class="card">
+    <p>Dir wurden noch keine Bots zugewiesen. Bitte kontaktiere einen Administrator.</p>
+</div>
+{% endif %}
+
+<div class="bot-grid">
+    {% for bot in bots %}
+    <div class="bot-card card">
+        <div class="bot-card-header">
+            <h3>{{ bot.name }}</h3>
+            <div class="status-indicator" id="status-{{ bot.id }}" data-status="unknown">
+                <span>UNKNOWN</span>
+            </div>
+        </div>
+        <div class="bot-card-actions">
+            <button class="btn-action start" onclick="startBot({{ bot.id }})"><i class="fa-solid fa-play"></i> Start</button>
+            <button class="btn-action stop" onclick="stopBot({{ bot.id }})"><i class="fa-solid fa-stop"></i> Stop</button>
+            <a href="{{ url_for('files.browse', bot_id=bot.id) }}" class="btn-action edit"><i class="fa-solid fa-file-pen"></i> Dateien</a>
+        </div>
+        <div class="log-viewer">
+            <pre id="logs-{{ bot.id }}">Verbinde mit Server für Logs...</pre>
+        </div>
+    </div>
+    {% endfor %}
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+    const socket = io();
+
+    socket.on('connect', () => {
+        console.log('Verbunden mit dem Controller-Server!');
+        // Frage den Status für alle Bots auf der Seite an
+        document.querySelectorAll('.bot-card').forEach(card => {
+            const botId = card.querySelector('.status-indicator').id.split('-')[1];
+            socket.emit('get_status', { bot_id: parseInt(botId) });
+            fetchInitialLogs(botId);
+        });
+    });
+
+    socket.on('status_update', (data) => {
+        const statusIndicator = document.getElementById(`status-${data.bot_id}`);
+        if (statusIndicator) {
+            statusIndicator.dataset.status = data.status;
+            statusIndicator.querySelector('span').textContent = data.status.toUpperCase();
+        }
+    });
+
+    socket.on('new_log', (data) => {
+        const logViewer = document.getElementById(`logs-${data.bot_id}`);
+        if (logViewer) {
+            logViewer.textContent += `\n${data.data}`;
+            logViewer.scrollTop = logViewer.scrollHeight; // Auto-scroll
+        }
+    });
+
+    function startBot(botId) {
+        socket.emit('start_bot', { bot_id: botId });
+    }
+
+    function stopBot(botId) {
+        socket.emit('stop_bot', { bot_id: botId });
+    }
+
+    async function fetchInitialLogs(botId) {
+        const logViewer = document.getElementById(`logs-${botId}`);
+        try {
+            const response = await fetch(`/get_initial_logs/${botId}`);
+            const logs = await response.json();
+            logViewer.textContent = logs.join('\n');
+            logViewer.scrollTop = logViewer.scrollHeight;
+        } catch (error) {
+            logViewer.textContent = 'Fehler beim Laden der initialen Logs.';
+            console.error('Log fetch error:', error);
+        }
+    }
+</script>
+{% endblock %}

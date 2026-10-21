@@ -1,0 +1,83 @@
+{% extends "layout.html" %}
+{% block title %}Admin Dashboard{% endblock %}
+
+{% block content %}
+<h1><i class="fa-solid fa-user-shield"></i> Admin Panel</h1>
+
+<div class="admin-grid">
+    <div class="card">
+        <h3>Benutzerverwaltung</h3>
+        <form action="{{ url_for('admin.create_user') }}" method="POST">
+            <div class="form-group">
+                <label>Neuen Benutzer anlegen</label>
+                <input type="text" name="username" placeholder="Benutzername" required>
+                <input type="password" name="password" placeholder="Passwort" required>
+            </div>
+            <div class="form-group">
+                 <input type="checkbox" name="is_admin" id="is_admin">
+                 <label for="is_admin">Zum Admin machen</label>
+            </div>
+            <button type="submit" class="btn-primary">Benutzer erstellen</button>
+        </form>
+        <hr>
+        <h4>Existierende Benutzer</h4>
+        <ul>
+            {% for user in users %}
+            <li>{{ user.username }} {% if user.is_admin %}(Admin){% endif %}</li>
+            {% endfor %}
+        </ul>
+    </div>
+
+    <div class="card">
+        <h3>Bot Verwaltung</h3>
+        <h4>Bot via ZIP-Upload hinzufügen</h4>
+        <form action="{{ url_for('admin.add_bot') }}" method="POST" enctype="multipart/form-data">
+            <div class="form-group">
+                <input type="text" name="bot_name" placeholder="Name des Bots (ohne Leerzeichen)" required>
+            </div>
+            <div class="form-group">
+                 <label>Besitzer zuweisen</label>
+                 <select name="owner_id" required>
+                    {% for user in users %}
+                    <option value="{{ user.id }}">{{ user.username }}</option>
+                    {% endfor %}
+                 </select>
+            </div>
+             <div class="form-group">
+                 <label>Bot ZIP-Datei</label>
+                 <input type="file" name="bot_zip" accept=".zip" required>
+            </div>
+            <button type="submit" class="btn-primary">Bot hinzufügen</button>
+        </form>
+        <hr>
+
+        {% if unregistered_bots %}
+        <h4>Nicht registrierte Bots</h4>
+        <p>Diese Ordner wurden im <code>managed_bots</code> Verzeichnis gefunden, sind aber nicht in der Datenbank.</p>
+        {% for u_bot in unregistered_bots %}
+        <form action="{{ url_for('admin.register_bot') }}" method="POST" class="unregistered-form">
+            <span>{{ u_bot.name }}</span>
+            <input type="hidden" name="bot_name" value="{{ u_bot.name }}">
+            <input type="hidden" name="bot_path" value="{{ u_bot.path }}">
+            <select name="owner_id" required>
+                {% for user in users %}<option value="{{ user.id }}">{{ user.username }}</option>{% endfor %}
+            </select>
+            <button type="submit" class="btn-action">Registrieren</button>
+        </form>
+        {% endfor %}
+        <hr>
+        {% endif %}
+
+        <h4>Registrierte Bots</h4>
+        {% for bot in bots %}
+        <div class="bot-manage-item">
+            <span>{{ bot.name }} (Besitzer: {{ bot.owner.username }})</span>
+            <form action="{{ url_for('admin.delete_bot', bot_id=bot.id) }}" method="POST" onsubmit="return confirm('ACHTUNG: Dadurch wird der Bot und sein gesamter Ordner DAUERHAFT gelöscht. Sicher?');">
+                <input type="text" name="confirmation_name" placeholder="Name des Bots zur Bestätigung" required>
+                <button type="submit" class="btn-action stop">Löschen</button>
+            </form>
+        </div>
+        {% endfor %}
+    </div>
+</div>
+{% endblock %}

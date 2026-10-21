@@ -1,0 +1,219 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Voice Creator Panel</title>
+    <link rel="stylesheet" href="{{ url_for('voice_creator_web.static', filename='style.css') }}">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+</head>
+<body>
+    <header>
+        <h1>Voice Creator Panel</h1>
+    </header>
+    
+    <div class="container">
+        <div class="tab">
+            <button class="tablinks active" onclick="openTab(event, 'voiceChannels')">Auto Voice Channels</button>
+            <button class="tablinks" onclick="openTab(event, 'messagePurge')">Message Auto-Delete</button>
+            <button class="tablinks" onclick="openTab(event, 'configEditor')">Channel Designs</button>
+        </div>
+        
+        <div id="voiceChannels" class="tabcontent visible">
+            <div class="card">
+                <h2>Auto Voice Channels Configuration</h2>
+                <p>Configure channels that will automatically create custom voice channels when users join them.</p>
+                
+                <form id="addVoiceChannelForm">
+                    <div class="form-group">
+                        <label for="joinChannelId">Join Channel ID:</label>
+                        <input type="text" id="joinChannelId" placeholder="ID of the channel users will join" required>
+                    </div>
+                    
+                    <div class="form-group">
+                        <label for="categoryId">Category ID:</label>
+                        <input type="text" id="categoryId" placeholder="ID of the category where new channels will be created" required>
+                    </div>
+                    
+                    <div class="form-group">
+                        <label for="channelFormat">Channel Name Format:</label>
+                        <input type="text" id="channelFormat" placeholder="Format like '{username}'s Channel' or '-Room{number}-'" value="{username}'s Channel">
+                        <small>Use {username} for user-based naming or {number} for sequential naming</small>
+                    </div>
+                    
+                    <div class="form-group">
+                        <label>
+                            <input type="checkbox" id="useSequential">
+                            Use sequential numbering instead of usernames
+                        </label>
+                    </div>
+                    
+                    <button type="submit">Add Join Channel</button>
+                </form>
+            </div>
+            
+            <div class="card">
+                <h2>Configured Join Channels</h2>
+                <div id="joinChannelsWrapper">
+                    <table class="table" id="joinChannelsTable">
+                        <thead>
+                            <tr>
+                                <th>Channel ID</th>
+                                <th>Channel Name</th>
+                                <th>Category ID</th>
+                                <th>Category Name</th>
+                                <th>Format</th>
+                                <th>Type</th>
+                                <th>Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody id="joinChannelsBody">
+                            </tbody>
+                    </table>
+                </div>
+            </div>
+            
+            <div class="card">
+                <h2>Settings</h2>
+                <div class="form-group">
+                    <label>
+                        <input type="checkbox" id="deleteEmptyChannels" checked>
+                        Automatically delete empty voice channels
+                    </label>
+                </div>
+                
+                <div class="form-group">
+                    <label>Channel Naming:</label>
+                    <div>
+                        <label>
+                            <input type="radio" name="namingMode" id="userNameMode" checked>
+                            Use user names for channels (e.g. "User's Channel")
+                        </label>
+                    </div>
+                    <div>
+                        <label>
+                            <input type="radio" name="namingMode" id="sequentialMode">
+                            Use sequential numbers (e.g. "-Room1-", "-Room2-", etc.)
+                        </label>
+                    </div>
+                </div>
+                
+                <div class="form-group">
+                    <label>
+                        <input type="checkbox" id="showDeleteWarning" checked>
+                        Show message deletion warning when first message is sent in auto-delete channels
+                    </label>
+                </div>
+                
+                <div id="sequentialSettings" style="display:none;" class="form-group">
+                    <button id="resetCounter" class="btn-danger">Reset Room Counter to 0</button>
+                </div>
+                
+                <div class="form-group">
+                    <label for="userChannelFormat">User Channel Format:</label>
+                    <input type="text" id="userChannelFormat" placeholder="Format for user channels">
+                    <small>Use {username} as a placeholder for the user's name</small>
+                </div>
+                
+                <div class="form-group">
+                    <label for="sequentialChannelFormat">Sequential Channel Format:</label>
+                    <input type="text" id="sequentialChannelFormat" placeholder="Format for sequential channels">
+                    <small>Use {number} as a placeholder for the room number</small>
+                </div>
+                
+                <button id="saveSettings">Save Settings</button>
+            </div>
+        </div>
+        
+        <div id="messagePurge" class="tabcontent">
+            <div class="card">
+                <h2>Auto-Delete Messages Configuration</h2>
+                <p>Configure channels where messages will be automatically deleted after a specified time.</p>
+                
+                <form id="autoDeleteForm1">
+                    <h3>Channel 1</h3>
+                    <div class="form-group">
+                        <label for="deleteChannelId1">Channel ID:</label>
+                        <input type="text" id="deleteChannelId1" placeholder="ID of the channel for auto-delete">
+                    </div>
+                    <div class="form-group">
+                        <label for="time1">Delete after (minutes):</label>
+                        <input type="number" id="time1" min="1" value="10">
+                    </div>
+                    <button type="submit">Save Channel 1</button>
+                </form>
+            </div>
+            
+            <div class="card">
+                <form id="autoDeleteForm2">
+                    <h3>Channel 2</h3>
+                    <div class="form-group">
+                        <label for="deleteChannelId2">Channel ID:</label>
+                        <input type="text" id="deleteChannelId2" placeholder="ID of the channel for auto-delete">
+                    </div>
+                    <div class="form-group">
+                        <label for="time2">Delete after (minutes):</label>
+                        <input type="number" id="time2" min="1" value="1440">
+                        <small>Default: 1440 minutes (24 hours)</small>
+                    </div>
+                    <button type="submit">Save Channel 2</button>
+                </form>
+            </div>
+            
+            <div class="card">
+                <form id="autoDeleteForm3">
+                    <h3>Channel 3</h3>
+                    <div class="form-group">
+                        <label for="deleteChannelId3">Channel ID:</label>
+                        <input type="text" id="deleteChannelId3" placeholder="ID of the channel for auto-delete">
+                    </div>
+                    <div class="form-group">
+                        <label for="time3">Delete after (minutes):</label>
+                        <input type="number" id="time3" min="1" value="10080">
+                        <small>Default: 10080 minutes (7 days)</small>
+                    </div>
+                    <button type="submit">Save Channel 3</button>
+                </form>
+            </div>
+        </div>
+        
+        <div id="configEditor" class="tabcontent">
+             <div class="card">
+                <h2>Channel Design Templates</h2>
+                <p>Define custom design templates for different channel types</p>
+                
+                <div id="channelTemplatesContainer">
+                    </div>
+                
+                <button id="addNewTemplate" class="mb-3">Add New Template</button>
+            </div>
+        </div>
+    </div>
+
+    <div id="editChannelModal" class="modal">
+        <div class="modal-content">
+            <span class="close" onclick="closeModal('editChannelModal')">&times;</span>
+            <h2>Edit Channel Design</h2>
+            
+            <form id="channelDesignForm">
+                <input type="hidden" id="templateId">
+                
+                <div class="form-group">
+                    <label for="templateName">Template Name:</label>
+                    <input type="text" id="templateName" required placeholder="e.g. Gaming Channels">
+                </div>
+                
+                <div class="form-group">
+                    <label for="modalChannelFormat">Channel Format:</label>
+                    <input type="text" id="modalChannelFormat" placeholder="e.g. 🎮 {username}'s Game">
+                    <small>Use {username} or {number} as placeholders</small>
+                </div>
+                
+                <button type="submit">Save Template</button>
+            </form>
+        </div>
+    </div>
+    
+    <script src="{{ url_for('voice_creator_web.static', filename='app.js') }}"></script>
+</body>
+</html>

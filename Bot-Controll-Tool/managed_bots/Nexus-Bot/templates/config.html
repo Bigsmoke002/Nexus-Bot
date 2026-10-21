@@ -1,0 +1,36 @@
+{% extends "layout.html" %}
+{% block content %}
+<h1><i class="fa-solid fa-gears"></i> Konfiguration</h1>
+<p>Ändere hier die Einstellungen deines Bots. Änderungen werden nach einem Neustart wirksam.</p>
+<div class="card">
+    <form method="POST">
+        <h3>Allgemeine Einstellungen</h3>
+        <div class="form-group">
+            <label for="bot_prefix">Bot-Präfix</label>
+            <input type="text" name="bot_prefix" id="bot_prefix" value="{{ config.bot_prefix }}">
+        </div>
+        <div class="form-group">
+            <label for="dashboard_password">Dashboard-Passwort</label>
+            <input type="password" name="dashboard_password" id="dashboard_password" placeholder="Leer lassen, um nicht zu ändern">
+        </div>
+        <h3 style="margin-top: 2rem;">Crash-Handler</h3>
+        <div class="form-group">
+            <div class="checkbox-wrapper">
+                <input type="checkbox" name="auto_restart" id="auto_restart" {% if config.crash_handler.auto_restart %}checked{% endif %}>
+                <label for="auto_restart">Bot nach Absturz automatisch neustarten</label>
+            </div>
+        </div>
+        <div class="form-group">
+            <label for="max_restarts">Maximale Neustarts</label>
+            <input type="number" name="max_restarts" id="max_restarts" value="{{ config.crash_handler.max_restarts }}">
+        </div>
+        <div class="form-group">
+            <label for="restart_delay_seconds">Verzögerung zwischen Neustarts (Sekunden)</label>
+            <input type="number" name="restart_delay_seconds" id="restart_delay_seconds" value="{{ config.crash_handler.restart_delay_seconds }}">
+        </div>
+        <button type="submit" class="btn-primary">
+            <i class="fa-solid fa-save"></i> Konfiguration Speichern
+        </button>
+    </form>
+</div>
+{% endblock %}

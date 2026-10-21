@@ -1,0 +1,39 @@
+{% extends "layout.html" %}
+{% block content %}
+<h1><i class="fa-solid fa-circle-user"></i> Bot-Status ändern</h1>
+<p>Hier kannst du die Präsenz deines Bots auf Discord in Echtzeit anpassen.</p>
+<div class="card">
+    <form method="POST">
+        <h3>Online-Status</h3>
+        <div class="form-group">
+            <label for="status">Wähle einen Status</label>
+            <select name="status" id="status" class="form-control" style="width: 100%; padding: 0.8rem; background: var(--bg-color); border: 1px solid var(--border-color); border-radius: 8px; color: var(--text-color); font-size: 1rem;">
+                <option value="online" {% if current_status.value == 'online' %}selected{% endif %}>Online</option>
+                <option value="idle" {% if current_status.value == 'idle' %}selected{% endif %}>Abwesend</option>
+                <option value="dnd" {% if current_status.value == 'dnd' %}selected{% endif %}>Bitte nicht stören</option>
+                <option value="invisible" {% if current_status.value == 'invisible' %}selected{% endif %}>Unsichtbar</option>
+            </select>
+        </div>
+
+        <h3 style="margin-top: 2rem;">Aktivität</h3>
+        <div class="form-group">
+            <label for="activity_type">Typ der Aktivität</label>
+            <select name="activity_type" id="activity_type" class="form-control" style="width: 100%; padding: 0.8rem; background: var(--bg-color); border: 1px solid var(--border-color); border-radius: 8px; color: var(--text-color); font-size: 1rem;">
+                <option value="none" {% if not current_activity %}selected{% endif %}>Keine</option>
+                <option value="playing" {% if current_activity and current_activity.type.name == 'playing' %}selected{% endif %}>Spielt</option>
+                <option value="watching" {% if current_activity and current_activity.type.name == 'watching' %}selected{% endif %}>Schaut</option>
+                <option value="listening" {% if current_activity and current_activity.type.name == 'listening' %}selected{% endif %}>Hört</option>
+                <option value="streaming" {% if current_activity and current_activity.type.name == 'streaming' %}selected{% endif %}>Streamt</option>
+            </select>
+        </div>
+        <div class="form-group">
+            <label for="activity_name">Text der Aktivität (z.B. "Phoenix Dashboard")</label>
+            <input type="text" name="activity_name" id="activity_name" value="{{ current_activity.name if current_activity else '' }}" placeholder="Was macht der Bot?">
+        </div>
+
+        <button type="submit" class="btn-primary">
+            <i class="fa-solid fa-save"></i> Status Aktualisieren
+        </button>
+    </form>
+</div>
+{% endblock %}

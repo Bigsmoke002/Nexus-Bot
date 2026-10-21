@@ -1,0 +1,152 @@
+<!DOCTYPE html>
+<html lang="{{ lang }}">
+<head>
+    <meta charset="UTF-8">
+    <title>{% if lang == 'de' %}Bot Verifizierung{% else %}Bot Verification{% endif %}</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <script src="https://cdn.jsdelivr.net/npm/@fingerprintjs/fingerprintjs@3/dist/fp.min.js"></script>
+    <style>
+        :root {
+            --bg-color: #1a1b26; --card-bg: #1f2335; --text-color: #c0caf5;
+            --border-color: #414868; --primary-color: #bb9af7; --secondary-color: #7dcfff;
+            --success-color: #9ece6a; --disabled-color: #565f89;
+        }
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&display=swap');
+        body {
+            background: var(--bg-color); color: var(--text-color); font-family: 'Inter', sans-serif;
+            display: flex; justify-content: center; align-items: center; min-height: 100vh; margin: 0; padding: 1rem;
+            box-sizing: border-box;
+        }
+        .container {
+            background: var(--card-bg); padding: 2.5rem; border-radius: 12px; border: 1px solid var(--border-color);
+            text-align: center; max-width: 550px; width: 100%; box-shadow: 0 8px 32px rgba(0,0,0,0.3);
+            transition: opacity 0.5s ease;
+        }
+        h1 { margin-top: 0; margin-bottom: 1rem; color: #fff; font-size: 1.8rem; }
+        p { margin-bottom: 1.5rem; line-height: 1.6; opacity: 0.8; }
+        button {
+            width: 100%; padding: 1rem; background: linear-gradient(90deg, var(--primary-color), var(--secondary-color));
+            border: none; color: #1a1b26; font-weight: 700; border-radius: 8px; cursor: pointer;
+            font-size: 1rem; transition: transform 0.2s ease, background-color 0.2s;
+        }
+        button:hover:not(:disabled) { transform: scale(1.02); }
+        button:disabled { background: var(--disabled-color); cursor: not-allowed; }
+        .privacy-section {
+            text-align: left; margin-top: 2rem; font-size: 0.9rem;
+        }
+        .privacy-section summary { cursor: pointer; font-weight: 600; opacity: 0.9; }
+        .privacy-section div {
+            margin-top: 0.5rem; padding: 1rem; background: var(--bg-color); border-radius: 8px;
+            opacity: 0.7; line-height: 1.7; max-height: 150px; overflow-y: auto;
+        }
+        .privacy-section ul { padding-left: 1.5rem; }
+        .checkbox-wrapper { display: flex; align-items: center; margin-top: 1.5rem; }
+        .checkbox-wrapper input { margin-right: 10px; width: 18px; height: 18px; }
+        .checkbox-wrapper label { cursor: pointer; }
+        #success-content { display: none; }
+        .checkmark { width: 100px; height: 100px; border-radius: 50%; display: block; stroke-width: 3; stroke: #fff; stroke-miterlimit: 10; margin: 0 auto; box-shadow: inset 0px 0px 0px var(--success-color); animation: fill .4s ease-in-out .4s forwards, scale .3s ease-in-out .9s both; }
+        .checkmark__circle { stroke-dasharray: 166; stroke-dashoffset: 166; stroke-width: 3; stroke-miterlimit: 10; stroke: var(--success-color); fill: none; animation: stroke 0.6s cubic-bezier(0.65, 0, 0.45, 1) forwards; }
+        .checkmark__check { transform-origin: 50% 50%; stroke-dasharray: 48; stroke-dashoffset: 48; animation: stroke 0.3s cubic-bezier(0.65, 0, 0.45, 1) 0.8s forwards; }
+        @keyframes stroke { 100% { stroke-dashoffset: 0; } }
+        @keyframes scale { 0%, 100% { transform: none; } 50% { transform: scale3d(1.1, 1.1, 1); } }
+        @keyframes fill { 100% { box-shadow: inset 0px 0px 0px 50px var(--success-color); } }
+    </style>
+</head>
+<body>
+    <div class="container" id="main-container">
+        <div id="initial-content">
+            <h1>{% if lang == 'de' %}Ein letzter Schritt...{% else %}One Last Step...{% endif %}</h1>
+            <p>{% if lang == 'de' %}Bitte bestätige die Datenschutzerklärung, um die Verifizierung abzuschließen.{% else %}Please accept the privacy policy to complete the verification.{% endif %}</p>
+            <form id="verify-form" action="/verify/submit" method="post">
+                <input type="hidden" name="user_id" value="{{ user_id }}">
+                <input type="hidden" name="lang" value="{{ lang }}">
+                <input type="hidden" name="fingerprint_id" id="fingerprint_id">
+                <input type="hidden" name="cookies_enabled" id="cookies_enabled">
+                <div class="privacy-section">
+                    <details>
+                        <summary>{% if lang == 'de' %}Datenschutzerklärung anzeigen{% else %}Show Privacy Policy{% endif %}</summary>
+                        <div>
+                            {% if lang == 'de' %}
+                                <p>Durch das Akzeptieren stimmst du der Erhebung und Speicherung der folgenden Daten zu:</p>
+                                <ul>
+                                    <li><strong>Deine Discord User ID:</strong> Zur eindeutigen Identifizierung.</li>
+                                    <li><strong>Deine IP-Adresse & User-Agent:</strong> Zur Prävention von Missbrauch und Bot-Angriffen.</li>
+                                    <li><strong>Browser-Fingerprint & Cookie-Status:</strong> Um doppelte Verifizierungen durch denselben Browser zu verhindern.</li>
+                                    <li><strong>Zeitstempel:</strong> Um zu protokollieren, wann du dich verifiziert hast.</li>
+                                </ul>
+                                <p>Diese Daten werden ausschließlich für Sicherheitszwecke verwendet und nicht an Dritte weitergegeben.</p>
+                            {% else %}
+                                <p>By accepting, you agree to the collection and storage of the following data:</p>
+                                <ul>
+                                    <li><strong>Your Discord User ID:</strong> For unique identification.</li>
+                                    <li><strong>Your IP Address & User-Agent:</strong> For the prevention of abuse and bot attacks.</li>
+                                    <li><strong>Browser Fingerprint & Cookie Status:</strong> To prevent duplicate verifications from the same browser.</li>
+                                    <li><strong>Timestamp:</strong> To log when you verified.</li>
+                                </ul>
+                                <p>This data is used exclusively for security purposes and is not shared with third parties.</p>
+                            {% endif %}
+                        </div>
+                    </details>
+                </div>
+                <div class="checkbox-wrapper">
+                    <input type="checkbox" id="privacy-consent" name="privacy-consent">
+                    <label for="privacy-consent">{% if lang == 'de' %}Ich habe die Datenschutzerklärung gelesen und akzeptiere sie.{% else %}I have read and accept the privacy policy.{% endif %}</label>
+                </div>
+                <button type="submit" id="submit-btn" disabled style="margin-top: 2rem;">
+                    {% if lang == 'de' %}Verifizierung abschließen{% else %}Complete Verification{% endif %}
+                </button>
+            </form>
+        </div>
+        <div id="success-content">
+            <svg class="checkmark" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 52 52">
+                <circle class="checkmark__circle" cx="26" cy="26" r="25" fill="none"/>
+                <path class="checkmark__check" fill="none" d="M14.1 27.2l7.1 7.2 16.7-16.8"/>
+            </svg>
+            <h1>{% if lang == 'de' %}Erfolgreich!{% else %}Success!{% endif %}</h1>
+            <p>{% if lang == 'de' %}Du kannst dieses Fenster jetzt schließen und zu Discord zurückkehren.{% else %}You can now close this window and return to Discord.{% endif %}</p>
+        </div>
+    </div>
+
+    <script>
+        const consentCheckbox = document.getElementById('privacy-consent');
+        const submitButton = document.getElementById('submit-btn');
+
+        async function gatherBrowserData() {
+            document.getElementById('cookies_enabled').value = navigator.cookieEnabled;
+            try {
+                const fp = await FingerprintJS.load();
+                const result = await fp.get();
+                document.getElementById('fingerprint_id').value = result.visitorId;
+            } catch (error) {
+                console.error("Fingerprint could not be generated:", error);
+                document.getElementById('fingerprint_id').value = "error";
+            }
+        }
+        window.addEventListener('load', gatherBrowserData);
+
+        consentCheckbox.addEventListener('change', function() {
+            submitButton.disabled = !this.checked;
+        });
+
+        document.getElementById('verify-form').addEventListener('submit', function(e) {
+            e.preventDefault();
+            const form = e.target;
+            const formData = new FormData(form);
+            fetch(form.action, { method: 'POST', body: formData });
+
+            document.getElementById('initial-content').style.display = 'none';
+            document.getElementById('success-content').style.display = 'block';
+
+            setTimeout(() => {
+                window.close();
+                setTimeout(() => {
+                    const successContent = document.getElementById('success-content');
+                    if (document.body.contains(successContent)) {
+                         successContent.innerHTML += "<p><small>{% if lang == 'de' %}Falls sich das Fenster nicht automatisch schließt, kannst du es manuell tun.{% else %}If this window does not close automatically, you may do so manually.{% endif %}</small></p>";
+                    }
+                }, 500);
+            }, 2500);
+        });
+    </script>
+</body>
+</html>

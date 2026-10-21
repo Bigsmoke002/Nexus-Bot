@@ -1,0 +1,8 @@
+# requirements.txt
+discord.py>=2.4.0
+Flask>=3.0.3
+psutil>=5.9.8
+aiohttp>=3.9.5
+Pillow>=10.0.0
+python-osc>=1.8.0
+flask-sock>=0.7.0

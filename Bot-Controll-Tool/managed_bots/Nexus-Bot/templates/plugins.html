@@ -1,0 +1,19 @@
+{% extends "layout.html" %}
+
+{% block content %}
+<h1><i class="fa-solid fa-puzzle-piece"></i> Geladene Plugins</h1>
+
+<div class="card">
+    <h3>Aktive Cogs ({{ cogs|length }})</h3>
+    <ul style="list-style: none; padding-left: 0;">
+        {% for cog in cogs %}
+            <li style="background: var(--bg-color); padding: 10px; border-radius: 5px; margin-bottom: 5px;">
+                {{ cog }}
+            </li>
+        {% else %}
+            <li>Keine Plugins geladen.</li>
+        {% endfor %}
+    </ul>
+</div>
+
+{% endblock %}
